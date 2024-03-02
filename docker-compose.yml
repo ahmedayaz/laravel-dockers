@@ -1,0 +1,54 @@
+services:
+
+  laravel-docker:
+    container_name: laravel-docker
+    restart: unless-stopped
+    build: .
+    volumes:
+      - ./laravel-app:/var/www/html
+    networks:
+      - dev-network
+    ports:
+      - 9000:80
+      
+  mysql_db:
+    image: mysql:latest
+    restart: unless-stopped
+    container_name: db
+    env_file: .env
+    environment:
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+      MYSQL_DATABASE: '${MYSQL_DATABASE}'
+      MYSQL_USER: '${MYSQL_USER}'
+      MYSQL_PASSWORD: '${MYSQL_PASSWORD}'
+    volumes:
+      - db-data:/var/lib/mysql
+    ports:
+    - 3306:3306
+    networks:
+      - dev-network
+    deploy:
+      resources:
+        limits:
+          memory: 2048m
+  
+  phpmyadmin:
+    depends_on:
+      - mysql_db
+    image: phpmyadmin:latest
+    restart: unless-stopped
+    ports:
+      - 8081:80
+    env_file: .env
+    environment:
+      PMA_HOST: mysql_db
+      MYSQL_ROOT_PASSWORD: '${MYSQL_ROOT_PASSWORD}'
+    networks:
+      - dev-network
+
+volumes:
+  db-data:
+
+networks:
+  dev-network:
+    driver: bridge  
